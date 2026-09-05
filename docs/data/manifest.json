@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0",
+  "student_kit_version": "v1.0",
+  "rules_version": "1.1",
+  "official_results_published": false,
+  "demo_type": "local_student_walkthrough",
+  "files": [
+    {
+      "path": ".nojekyll",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "assets/site.css",
+      "bytes": 5777,
+      "sha256": "39a7a1ea6dfcec54a5d272d6f3387450673d0c14cb8d794abcc200bdeadb52fe"
+    },
+    {
+      "path": "bracket.html",
+      "bytes": 945,
+      "sha256": "259d649afba4755e5cafe6f0a5f6f0d9f087039fdcff17f2759d283ee72083dc"
+    },
+    {
+      "path": "demo.html",
+      "bytes": 2885,
+      "sha256": "c781375930f4697919ab5e962db9904e55d7a64f944d748a7e2464e69ec9c297"
+    },
+    {
+      "path": "downloads/abc123.py",
+      "bytes": 422,
+      "sha256": "cc5a198c3d51a313e69495e07ec8374e10859f9e898fbdb636cb2edf3d6a4467"
+    },
+    {
+      "path": "downloads/student-kit.zip",
+      "bytes": 636895,
+      "sha256": "cefc2070b380ab3c2bdbb09e19a77bf87b2c7f347f7bdccde6a9eb405f859f7e"
+    },
+    {
+      "path": "getting-started.html",
+      "bytes": 2671,
+      "sha256": "1ba987ee0fadd7e07561ccd40ed203a433c22badb66200e916a04492e09bec3c"
+    },
+    {
+      "path": "index.html",
+      "bytes": 2460,
+      "sha256": "0c58edab1f8c90478480003bda3fdf95c9f36c51113b013a0b8b8b902ba83ed5"
+    },
+    {
+      "path": "leaderboard.html",
+      "bytes": 937,
+      "sha256": "b81a9673ea76c8fe98029ac3124969bd4fea9933de1358605fcd0a8f3a112f64"
+    },
+    {
+      "path": "materials/PUBLIC_COMPETITION_RULES.md",
+      "bytes": 9128,
+      "sha256": "57e1fdce6b0dafa0efb68c03b5ba29f52567003dfed0c55c573e509045f7642b"
+    },
+    {
+      "path": "materials/STUDENT_GUIDE.pdf",
+      "bytes": 336573,
+      "sha256": "a3dc68929eb0b921e58274315888b8f2eadaad2c4e0a343295c2f43681759151"
+    },
+    {
+      "path": "materials/guide.pdf",
+      "bytes": 336573,
+      "sha256": "a3dc68929eb0b921e58274315888b8f2eadaad2c4e0a343295c2f43681759151"
+    },
+    {
+      "path": "materials/project.pdf",
+      "bytes": 301496,
+      "sha256": "725a5c2604f05449ec63e44a3067aafbce8a1fe976ec6d5b1a863d55fba00782"
+    },
+    {
+      "path": "materials/rules.md",
+      "bytes": 9128,
+      "sha256": "57e1fdce6b0dafa0efb68c03b5ba29f52567003dfed0c55c573e509045f7642b"
+    },
+    {
+      "path": "replay.html",
+      "bytes": 939,
+      "sha256": "c08f82597e34990143f6e03da9ea4221559b8c14ce7b71d1694736a9ec7a96dc"
+    },
+    {
+      "path": "rules.html",
+      "bytes": 11410,
+      "sha256": "f75f9396afcdb3955837079418cd80f23d836c925ad74ff561e5ed25ef9791c3"
+    }
+  ]
+}
