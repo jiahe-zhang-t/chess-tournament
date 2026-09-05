@@ -1,39 +1,4 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="A staff teaching example showing the current board, a legal decision, local validation, and replay.">
-<title>Demo | ECE-GY 6263 Chess</title>
-<link rel="stylesheet" href="assets/site.css"></head><body>
-<a class="skip-link" href="#main">Skip to content</a>
-<header class="site-header"><div class="header-inner"><div class="brand"><a href="index.html">ECE-GY 6263</a><span>Game Theory · Fall 2026</span></div><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="getting-started.html">Getting Started</a><a href="rules.html">Rules</a><a href="demo.html" aria-current="page">Demo</a><a href="leaderboard.html">Leaderboard</a><a href="bracket.html">Bracket</a><a href="replay.html">Replay</a></nav></div></header>
-<main id="main">
-<div class="content"><h1>Demo</h1>
-<p>This agent picks the first legal move.</p>
-<div class="actions"><a class="button" href="downloads/abc123.py" download>Download Example Agent</a><a class="button secondary" href="downloads/student-kit.zip" download>Download Student Kit</a></div>
-<p>Submit using your own NetID, not <code>abc123.py</code>.</p>
-<section class="section"><h2>Agent</h2><pre><code>&quot;&quot;&quot;Copy this file to YOUR_NETID.py and replace the strategy.&quot;&quot;&quot;
-
-import chess
-
-from chess_tournament_api import ChessAgent, Observation
-
-
-class MyChessAgent(ChessAgent):
-    name = &quot;My Agent&quot;
-
-    def choose_move(self, observation: Observation) -&gt; str:
-        board = chess.Board(observation.fen)
-
-        # Replace this first-legal-move policy with your own strategy.
-        return next(iter(board.legal_moves)).uci()
-
-</code></pre>
-<p><code>observation.fen</code> is the board position. Return a legal move as a UCI string, such as <code>e2e4</code>.</p></section>
-<section class="section"><h2>Run the demo</h2><ol class="steps">
-<li><div><h3>Add Your Agent</h3><p>Open the Student Kit and add the downloaded <code>abc123.py</code>.</p></div></li>
-<li><div><h3>Choose the Agent to Test</h3><p>Select <code>abc123.py</code>.</p></div></li>
-<li><div><h3>Validate Your Agent</h3><p>Run validation and review the PASS rows and <strong>READY TO SUBMIT</strong> message.</p></div></li>
-<li><div><h3>Run Test Games</h3><p>Select <strong>Greedy Test Agent</strong> and <strong>4</strong> games. Open <strong>View Game Report</strong>, then use Replay and drag the move slider.</p></div></li></ol></section>
-<div class="notice"><h2>Practice only</h2><p>Random and Greedy do not count toward the official benchmark score B. This is not a qualification tournament.</p></div>
-<section class="section"><h2>Next</h2><p>Compare <code>public_agents/greedy_agent.py</code>, then develop your own strategy.</p></section></div>
-</main>
-</body></html>
+<meta http-equiv="refresh" content="0;url=project.html#demo"><title>Example Agent</title></head>
+<body><a href="project.html#demo">Example Agent</a></body></html>
