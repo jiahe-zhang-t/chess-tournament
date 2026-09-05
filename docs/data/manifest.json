@@ -38,8 +38,8 @@
     },
     {
       "path": "downloads/Chess_Agent_Competition_Starter_v1.0.zip",
-      "bytes": 636895,
-      "sha256": "cefc2070b380ab3c2bdbb09e19a77bf87b2c7f347f7bdccde6a9eb405f859f7e"
+      "bytes": 635719,
+      "sha256": "b8817a548878a51155eb8b871e3537ff04b03d2c468e45addea5c1468cfd3d19"
     },
     {
       "path": "downloads/abc123.py",
@@ -48,8 +48,8 @@
     },
     {
       "path": "downloads/student-kit.zip",
-      "bytes": 636895,
-      "sha256": "cefc2070b380ab3c2bdbb09e19a77bf87b2c7f347f7bdccde6a9eb405f859f7e"
+      "bytes": 635719,
+      "sha256": "b8817a548878a51155eb8b871e3537ff04b03d2c468e45addea5c1468cfd3d19"
     },
     {
       "path": "getting-started.html",
@@ -68,8 +68,8 @@
     },
     {
       "path": "materials/PUBLIC_COMPETITION_RULES.md",
-      "bytes": 9128,
-      "sha256": "57e1fdce6b0dafa0efb68c03b5ba29f52567003dfed0c55c573e509045f7642b"
+      "bytes": 6045,
+      "sha256": "fd96101153fc798151e2f80ec4567770915c39eac20e96a668c6edbb5c8e92e8"
     },
     {
       "path": "materials/STUDENT_GUIDE.pdf",
@@ -88,18 +88,18 @@
     },
     {
       "path": "materials/rules.docx",
-      "bytes": 43047,
-      "sha256": "fa368a12b9a06501128a5f66ed88232b4feb64d6e083838cbd7e79692eccf8e8"
+      "bytes": 41873,
+      "sha256": "0b4f227d23803cd92545bdacae1e77d1358e344c8618e73e624d42b93f2c2a0c"
     },
     {
       "path": "materials/rules.md",
-      "bytes": 9128,
-      "sha256": "57e1fdce6b0dafa0efb68c03b5ba29f52567003dfed0c55c573e509045f7642b"
+      "bytes": 6045,
+      "sha256": "fd96101153fc798151e2f80ec4567770915c39eac20e96a668c6edbb5c8e92e8"
     },
     {
       "path": "materials/rules.pdf",
-      "bytes": 259915,
-      "sha256": "8c084c1043658803ab6b020e7772895f5073d44ced50962dc7b82d4f0c11da42"
+      "bytes": 234917,
+      "sha256": "7c8d844bbf1ae7f9dff3d789b8a5ebbba2192ce555cfe1fc65f240c1b3c4378f"
     },
     {
       "path": "project.html",
