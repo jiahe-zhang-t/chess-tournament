@@ -55,9 +55,10 @@ p { margin: 0 0 .65rem; max-width: 70ch; }
 .content { max-width: 850px; }
 .link-row { display: flex; flex-wrap: wrap; gap: .6rem 1.7rem; margin-top: .75rem; }
 .link-row a { display: inline-flex; align-items: center; min-height: 36px; }
-.flow { display: grid; grid-template-columns: 1.7fr 1fr .75fr .85fr; gap: 1.7rem; padding: 0; margin: .75rem 0; list-style: none; }
-.flow li { position: relative; font-weight: 600; align-self: center; }
-.flow li + li::before { content: "→"; position: absolute; left: -1.3rem; color: var(--muted); font-weight: 400; }
+.home-links { margin-top: 1.1rem; }
+.rules-links { margin: -.2rem 0 1.75rem; }
+.example-note { margin-top: .85rem; }
+.entry-table { max-width: 620px; }
 .document-list { border-top: 1px solid var(--line); }
 .document-list + .section { border-top: 0; }
 .document-row { display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; align-items: start; gap: 1rem; padding: 1.1rem 0; border-bottom: 1px solid var(--line); color: var(--ink); text-decoration: none; }
@@ -66,12 +67,6 @@ p { margin: 0 0 .65rem; max-width: 70ch; }
 .document-row:hover h2 { color: var(--accent); text-decoration: underline; text-underline-offset: .2em; }
 .document-number { color: var(--muted); font-size: .875rem; padding-top: .25rem; }
 .document-action { color: var(--accent); font-size: .875rem; white-space: nowrap; padding-top: .25rem; }
-.score-definitions { margin: 0; }
-.score-definitions > div { display: grid; grid-template-columns: 14rem minmax(0, 1fr); column-gap: 1.4rem; padding: .6rem 0; }
-.score-definitions dt { font-weight: 700; }
-.score-definitions dt span { font-weight: 500; margin-left: .7rem; }
-.score-definitions dd { margin: 0; color: var(--muted); }
-.formula { font-family: Georgia, "Times New Roman", serif; font-size: 1.55rem; margin: .9rem 0; }
 code { font-family: Consolas, "Courier New", monospace; font-size: .94em; overflow-wrap: anywhere; }
 .table-wrap { max-width: 100%; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; background: white; }
@@ -86,10 +81,6 @@ th { background: #edf2f8; font-weight: 650; }
 @media (max-width: 760px) {
   .home-top { grid-template-columns: 1fr; gap: 1rem; }
   main { padding-top: 1.4rem; }
-  .flow { grid-template-columns: 1fr; gap: .65rem; }
-  .flow li + li { padding-left: 1.4rem; }
-  .flow li + li::before { content: "↓"; left: 0; }
-  .score-definitions > div { grid-template-columns: 1fr; row-gap: .25rem; }
 }
 @media (max-width: 440px) {
   .header-inner, main { width: calc(100% - 2rem); }

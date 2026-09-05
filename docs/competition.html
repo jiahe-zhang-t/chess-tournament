@@ -1,22 +1,25 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Qualification and playoffs.">
+<meta name="description" content="How the class tournament works.">
 <title>Competition | ECE-GY 6263 Chess</title>
 <link rel="stylesheet" href="assets/site.css"></head><body>
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header"><div class="header-inner"><div class="brand"><a href="index.html">ECE-GY 6263</a><span>Game Theory · Fall 2026</span></div><nav aria-label="Main navigation"><a href="index.html">Home</a><a href="project.html">Project</a><a href="competition.html" aria-current="page">Competition</a><a href="results.html">Results</a></nav></div></header>
 <main id="main">
 <div class="content"><h1>Competition</h1>
-<section><h2>Qualification</h2>
-<dl class="score-definitions"><div><dt>B <span>Hidden Benchmark</span></dt><dd>Evaluation against a common set of instructor-side opponents.</dd></div>
-<div><dt>R <span>Student League</span></dt><dd>A round robin against the other valid student agents.</dd></div></dl>
-<p class="formula">Q = 0.5B + 0.5R</p>
-<p>Q determines qualification and playoff seeding. For one valid agent, Q = B; no league, playoffs, or champion.</p>
-<p class="meta">Random and Greedy are practice opponents and do not contribute to B.</p></section>
-<section class="section"><h2>Playoffs</h2>
-<p>The highest-ranked qualifiers advance. Final placement follows playoff stage, then Q within the same eliminated stage.</p>
-<div class="table-wrap"><table><thead><tr><th scope="col">Valid agents (N)</th><th scope="col">Playoff places (K)</th></tr></thead><tbody><tr><td>32 or more</td><td>16</td></tr><tr><td>16 through 31</td><td>8</td></tr><tr><td>8 through 15</td><td>4</td></tr><tr><td>2 through 7</td><td>2</td></tr><tr><td>Fewer than 2</td><td>No champion</td></tr></tbody></table></div>
-<p class="after-table">The playoffs determine the champion. See the full rules for ties and scoring.</p>
-<div class="link-row"><a href="materials/rules.md">Competition Rules →</a><a href="results.html">View Results →</a></div></section>
+<div class="link-row rules-links"><a href="materials/rules.pdf">Competition Rules (PDF)</a><a href="materials/rules.docx" download>Word version</a></div>
+<section><h2>Who your agent plays</h2>
+<p>Every valid student agent plays 32 games against four instructor-provided opponents, and four games against each other student agent. Each set includes games as White and Black.</p>
+<p class="meta">Random and Greedy in the Starter are for practice only.</p></section>
+<section class="section"><h2>How agents advance</h2>
+<p>Results against instructor opponents and students each give a percentage score. Their average determines the initial ranking. The top-ranked agents enter the knockout rounds:</p>
+<div class="table-wrap"><table class="entry-table"><thead><tr><th scope="col">Valid student agents</th><th scope="col">Agents advancing</th></tr></thead><tbody><tr><td>32 or more</td><td>16</td></tr><tr><td>16 through 31</td><td>8</td></tr><tr><td>8 through 15</td><td>4</td></tr><tr><td>2 through 7</td><td>2</td></tr><tr><td>Fewer than 2</td><td>No champion</td></tr></tbody></table></div>
+<p class="after-table">The highest-ranked entrant plays the lowest-ranked entrant, and so on.</p>
+<p class="meta">With only one valid agent, only instructor-opponent results count. There is no knockout round or champion.</p></section>
+<section class="section"><h2>How the champion is decided</h2>
+<p>Two agents play a series of games. The series winner advances; losing one game does not mean elimination. Each round reduces the field until two agents meet in the final.</p>
+<p>The final winner is champion and the other finalist finishes second. Everyone else is ranked by the round they reached, then by their initial score among agents eliminated in that round.</p>
+<p class="meta">The Rules PDF gives the series lengths, tie procedures, and grading formulas.</p>
+<div class="link-row"><a href="results.html">View Results</a></div></section>
 </div></main>
 </body></html>

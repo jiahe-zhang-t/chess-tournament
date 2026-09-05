@@ -18,8 +18,8 @@
     },
     {
       "path": "assets/site.css",
-      "bytes": 6372,
-      "sha256": "d93c8a22be31750f94891392254e3a32b43ca3035b9de9bd110498f0cf0fc35a"
+      "bytes": 5551,
+      "sha256": "3ea76d7e34da8fa403382ec4a57bfd40a4d40cdd6510b84e820b47117b6503c2"
     },
     {
       "path": "bracket.html",
@@ -28,8 +28,8 @@
     },
     {
       "path": "competition.html",
-      "bytes": 2145,
-      "sha256": "2484e98076ff14c3cb947716d1a6b5d77741546876fddf22d6f0e2d8f54b78b7"
+      "bytes": 2749,
+      "sha256": "7b96a6da2f9b09d0d7f4f499b0b74d01f6aeca6c2a93f1b830b696671382a089"
     },
     {
       "path": "demo.html",
@@ -58,8 +58,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 2472,
-      "sha256": "194afa785dc20f3db61d7bbbd07788744f84ac31d40eed62fac3e300907a1765"
+      "bytes": 2218,
+      "sha256": "56b7150fbf2a1f47fe7b3091bf89148eea28c34d97f427f53e5af799dbf0f634"
     },
     {
       "path": "leaderboard.html",
@@ -87,14 +87,24 @@
       "sha256": "725a5c2604f05449ec63e44a3067aafbce8a1fe976ec6d5b1a863d55fba00782"
     },
     {
+      "path": "materials/rules.docx",
+      "bytes": 43047,
+      "sha256": "fa368a12b9a06501128a5f66ed88232b4feb64d6e083838cbd7e79692eccf8e8"
+    },
+    {
       "path": "materials/rules.md",
       "bytes": 9128,
       "sha256": "57e1fdce6b0dafa0efb68c03b5ba29f52567003dfed0c55c573e509045f7642b"
     },
     {
+      "path": "materials/rules.pdf",
+      "bytes": 259915,
+      "sha256": "8c084c1043658803ab6b020e7772895f5073d44ced50962dc7b82d4f0c11da42"
+    },
+    {
       "path": "project.html",
-      "bytes": 2478,
-      "sha256": "2a1b1722018fac0b88a0445ff428e36372188473f4dbfd18435b1c6e313908a2"
+      "bytes": 2383,
+      "sha256": "dff1e90448408f6757fc6e65ec2f1249136157b79c55d1c6ed176408b00c2347"
     },
     {
       "path": "replay.html",
