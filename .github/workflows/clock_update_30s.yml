@@ -99,9 +99,24 @@ jobs:
                   patch_paragraph(paragraph)
               for table in doc.tables:
                   for row in table.rows:
+                      row_text = " | ".join(cell.text for cell in row.cells)
                       for cell in row.cells:
                           for paragraph in cell.paragraphs:
                               patch_paragraph(paragraph)
+                      if "Starting clock" in row_text:
+                          for cell in row.cells:
+                              original = cell.text
+                              updated = original.replace("10.0 seconds", "30.0 seconds").replace("10 seconds", "30 seconds")
+                              if updated != original:
+                                  cell.text = updated
+                                  total += 1
+                      if "Time added after a legal move" in row_text:
+                          for cell in row.cells:
+                              original = cell.text
+                              updated = original.replace("0.1 seconds", "0.3 seconds").replace("0.1 s", "0.3 s")
+                              if updated != original:
+                                  cell.text = updated
+                                  total += 1
 
               if not total:
                   return data, 0
