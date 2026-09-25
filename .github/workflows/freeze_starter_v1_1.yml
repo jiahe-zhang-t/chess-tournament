@@ -37,6 +37,7 @@ jobs:
 
           from pathlib import Path
           import hashlib
+          import base64
           import io
           import json
           import os
@@ -145,86 +146,7 @@ jobs:
 
               # Correct the deliberately shallow teaching example without changing its purpose.
               p = new_dir / "workspace" / "example_minimax.py"
-              p.write_text(
-                  '''"""A deliberately shallow teaching example, not an official benchmark."""
-
-import random
-import time
-
-import chess
-
-from chess_tournament_api import ChessAgent, Observation
-
-
-VALUES = {
-    chess.PAWN: 100,
-    chess.KNIGHT: 320,
-    chess.BISHOP: 330,
-    chess.ROOK: 500,
-    chess.QUEEN: 900,
-    chess.KING: 0,
-}
-
-
-def evaluate(board: chess.Board) -> int:
-    if board.is_checkmate():
-        return -100_000
-    if board.is_game_over(claim_draw=True):
-        return 0
-    color = board.turn
-    value = 0
-    for piece_type, piece_value in VALUES.items():
-        value += len(board.pieces(piece_type, color)) * piece_value
-        value -= len(board.pieces(piece_type, not color)) * piece_value
-    return value
-
-
-def negamax(
-    board: chess.Board,
-    depth: int,
-    alpha: int,
-    beta: int,
-    deadline: float,
-) -> int:
-    if time.monotonic() >= deadline or depth == 0 or board.is_game_over(claim_draw=True):
-        return evaluate(board)
-
-    best = -1_000_000
-    for move in sorted(board.legal_moves, key=lambda item: item.uci()):
-        board.push(move)
-        score = -negamax(board, depth - 1, -beta, -alpha, deadline)
-        board.pop()
-        best = max(best, score)
-        alpha = max(alpha, score)
-        if alpha >= beta or time.monotonic() >= deadline:
-            break
-    return best
-
-
-class TeachingMinimaxAgent(ChessAgent):
-    name = "Teaching Minimax"
-
-    def choose_move(self, observation: Observation) -> str:
-        board = chess.Board(observation.fen)
-        budget = min(0.08, max(0.01, observation.my_remaining_time * 0.02))
-        deadline = time.monotonic() + budget
-        rng = random.Random(observation.seed)
-        scored: list[tuple[int, str, chess.Move]] = []
-
-        for move in sorted(board.legal_moves, key=lambda item: item.uci()):
-            board.push(move)
-            score = -negamax(board, 1, -1_000_000, 1_000_000, deadline)
-            board.pop()
-            scored.append((score, move.uci(), move))
-            if time.monotonic() >= deadline:
-                break
-
-        best_score = max(item[0] for item in scored)
-        best_moves = [item[2] for item in scored if item[0] == best_score]
-        return rng.choice(best_moves).uci()
-''',
-                  encoding="utf-8",
-              )
+              p.write_bytes(base64.b64decode("IiIiQSBkZWxpYmVyYXRlbHkgc2hhbGxvdyB0ZWFjaGluZyBleGFtcGxlLCBub3QgYW4gb2ZmaWNpYWwgYmVuY2htYXJrLiIiIgoKaW1wb3J0IHJhbmRvbQppbXBvcnQgdGltZQoKaW1wb3J0IGNoZXNzCgpmcm9tIGNoZXNzX3RvdXJuYW1lbnRfYXBpIGltcG9ydCBDaGVzc0FnZW50LCBPYnNlcnZhdGlvbgoKClZBTFVFUyA9IHsKICAgIGNoZXNzLlBBV046IDEwMCwKICAgIGNoZXNzLktOSUdIVDogMzIwLAogICAgY2hlc3MuQklTSE9QOiAzMzAsCiAgICBjaGVzcy5ST09LOiA1MDAsCiAgICBjaGVzcy5RVUVFTjogOTAwLAogICAgY2hlc3MuS0lORzogMCwKfQoKCmRlZiBldmFsdWF0ZShib2FyZDogY2hlc3MuQm9hcmQpIC0+IGludDoKICAgIGlmIGJvYXJkLmlzX2NoZWNrbWF0ZSgpOgogICAgICAgIHJldHVybiAtMTAwXzAwMAogICAgaWYgYm9hcmQuaXNfZ2FtZV9vdmVyKGNsYWltX2RyYXc9VHJ1ZSk6CiAgICAgICAgcmV0dXJuIDAKICAgIGNvbG9yID0gYm9hcmQudHVybgogICAgdmFsdWUgPSAwCiAgICBmb3IgcGllY2VfdHlwZSwgcGllY2VfdmFsdWUgaW4gVkFMVUVTLml0ZW1zKCk6CiAgICAgICAgdmFsdWUgKz0gbGVuKGJvYXJkLnBpZWNlcyhwaWVjZV90eXBlLCBjb2xvcikpICogcGllY2VfdmFsdWUKICAgICAgICB2YWx1ZSAtPSBsZW4oYm9hcmQucGllY2VzKHBpZWNlX3R5cGUsIG5vdCBjb2xvcikpICogcGllY2VfdmFsdWUKICAgIHJldHVybiB2YWx1ZQoKCmRlZiBuZWdhbWF4KAogICAgYm9hcmQ6IGNoZXNzLkJvYXJkLAogICAgZGVwdGg6IGludCwKICAgIGFscGhhOiBpbnQsCiAgICBiZXRhOiBpbnQsCiAgICBkZWFkbGluZTogZmxvYXQsCikgLT4gaW50OgogICAgaWYgdGltZS5tb25vdG9uaWMoKSA+PSBkZWFkbGluZSBvciBkZXB0aCA9PSAwIG9yIGJvYXJkLmlzX2dhbWVfb3ZlcihjbGFpbV9kcmF3PVRydWUpOgogICAgICAgIHJldHVybiBldmFsdWF0ZShib2FyZCkKCiAgICBiZXN0ID0gLTFfMDAwXzAwMAogICAgZm9yIG1vdmUgaW4gc29ydGVkKGJvYXJkLmxlZ2FsX21vdmVzLCBrZXk9bGFtYmRhIGl0ZW06IGl0ZW0udWNpKCkpOgogICAgICAgIGJvYXJkLnB1c2gobW92ZSkKICAgICAgICBzY29yZSA9IC1uZWdhbWF4KGJvYXJkLCBkZXB0aCAtIDEsIC1iZXRhLCAtYWxwaGEsIGRlYWRsaW5lKQogICAgICAgIGJvYXJkLnBvcCgpCiAgICAgICAgYmVzdCA9IG1heChiZXN0LCBzY29yZSkKICAgICAgICBhbHBoYSA9IG1heChhbHBoYSwgc2NvcmUpCiAgICAgICAgaWYgYWxwaGEgPj0gYmV0YSBvciB0aW1lLm1vbm90b25pYygpID49IGRlYWRsaW5lOgogICAgICAgICAgICBicmVhawogICAgcmV0dXJuIGJlc3QKCgpjbGFzcyBUZWFjaGluZ01pbmltYXhBZ2VudChDaGVzc0FnZW50KToKICAgIG5hbWUgPSAiVGVhY2hpbmcgTWluaW1heCIKCiAgICBkZWYgY2hvb3NlX21vdmUoc2VsZiwgb2JzZXJ2YXRpb246IE9ic2VydmF0aW9uKSAtPiBzdHI6CiAgICAgICAgYm9hcmQgPSBjaGVzcy5Cb2FyZChvYnNlcnZhdGlvbi5mZW4pCiAgICAgICAgYnVkZ2V0ID0gbWluKDAuMDgsIG1heCgwLjAxLCBvYnNlcnZhdGlvbi5teV9yZW1haW5pbmdfdGltZSAqIDAuMDIpKQogICAgICAgIGRlYWRsaW5lID0gdGltZS5tb25vdG9uaWMoKSArIGJ1ZGdldAogICAgICAgIHJuZyA9IHJhbmRvbS5SYW5kb20ob2JzZXJ2YXRpb24uc2VlZCkKICAgICAgICBzY29yZWQ6IGxpc3RbdHVwbGVbaW50LCBzdHIsIGNoZXNzLk1vdmVdXSA9IFtdCgogICAgICAgIGZvciBtb3ZlIGluIHNvcnRlZChib2FyZC5sZWdhbF9tb3Zlcywga2V5PWxhbWJkYSBpdGVtOiBpdGVtLnVjaSgpKToKICAgICAgICAgICAgYm9hcmQucHVzaChtb3ZlKQogICAgICAgICAgICBzY29yZSA9IC1uZWdhbWF4KGJvYXJkLCAxLCAtMV8wMDBfMDAwLCAxXzAwMF8wMDAsIGRlYWRsaW5lKQogICAgICAgICAgICBib2FyZC5wb3AoKQogICAgICAgICAgICBzY29yZWQuYXBwZW5kKChzY29yZSwgbW92ZS51Y2koKSwgbW92ZSkpCiAgICAgICAgICAgIGlmIHRpbWUubW9ub3RvbmljKCkgPj0gZGVhZGxpbmU6CiAgICAgICAgICAgICAgICBicmVhawoKICAgICAgICBiZXN0X3Njb3JlID0gbWF4KGl0ZW1bMF0gZm9yIGl0ZW0gaW4gc2NvcmVkKQogICAgICAgIGJlc3RfbW92ZXMgPSBbaXRlbVsyXSBmb3IgaXRlbSBpbiBzY29yZWQgaWYgaXRlbVswXSA9PSBiZXN0X3Njb3JlXQogICAgICAgIHJldHVybiBybmcuY2hvaWNlKGJlc3RfbW92ZXMpLnVjaSgpCgo="))
 
               # Starter identity, while API stays 1.0 and Rules stay 1.2.
               for rel in ("pyproject.toml", "uv.lock"):
