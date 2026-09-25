@@ -145,55 +145,86 @@ jobs:
 
               # Correct the deliberately shallow teaching example without changing its purpose.
               p = new_dir / "workspace" / "example_minimax.py"
-              text = p.read_text(encoding="utf-8")
-              text = text.replace(
-                  """def evaluate(board: chess.Board, color: chess.Color) -> int:
-              if board.is_checkmate():
-                  return -100_000 if board.turn == color else 100_000
-              value = 0
-              for piece_type, piece_value in VALUES.items():
-                  value += len(board.pieces(piece_type, color)) * piece_value
-                  value -= len(board.pieces(piece_type, not color)) * piece_value
-              return value
-              """,
-                  """def evaluate(board: chess.Board) -> int:
-              if board.is_checkmate():
-                  return -100_000
-              if board.is_game_over(claim_draw=True):
-                  return 0
-              color = board.turn
-              value = 0
-              for piece_type, piece_value in VALUES.items():
-                  value += len(board.pieces(piece_type, color)) * piece_value
-                  value -= len(board.pieces(piece_type, not color)) * piece_value
-              return value
-              """,
+              p.write_text(
+                  '''"""A deliberately shallow teaching example, not an official benchmark."""
+
+import random
+import time
+
+import chess
+
+from chess_tournament_api import ChessAgent, Observation
+
+
+VALUES = {
+    chess.PAWN: 100,
+    chess.KNIGHT: 320,
+    chess.BISHOP: 330,
+    chess.ROOK: 500,
+    chess.QUEEN: 900,
+    chess.KING: 0,
+}
+
+
+def evaluate(board: chess.Board) -> int:
+    if board.is_checkmate():
+        return -100_000
+    if board.is_game_over(claim_draw=True):
+        return 0
+    color = board.turn
+    value = 0
+    for piece_type, piece_value in VALUES.items():
+        value += len(board.pieces(piece_type, color)) * piece_value
+        value -= len(board.pieces(piece_type, not color)) * piece_value
+    return value
+
+
+def negamax(
+    board: chess.Board,
+    depth: int,
+    alpha: int,
+    beta: int,
+    deadline: float,
+) -> int:
+    if time.monotonic() >= deadline or depth == 0 or board.is_game_over(claim_draw=True):
+        return evaluate(board)
+
+    best = -1_000_000
+    for move in sorted(board.legal_moves, key=lambda item: item.uci()):
+        board.push(move)
+        score = -negamax(board, depth - 1, -beta, -alpha, deadline)
+        board.pop()
+        best = max(best, score)
+        alpha = max(alpha, score)
+        if alpha >= beta or time.monotonic() >= deadline:
+            break
+    return best
+
+
+class TeachingMinimaxAgent(ChessAgent):
+    name = "Teaching Minimax"
+
+    def choose_move(self, observation: Observation) -> str:
+        board = chess.Board(observation.fen)
+        budget = min(0.08, max(0.01, observation.my_remaining_time * 0.02))
+        deadline = time.monotonic() + budget
+        rng = random.Random(observation.seed)
+        scored: list[tuple[int, str, chess.Move]] = []
+
+        for move in sorted(board.legal_moves, key=lambda item: item.uci()):
+            board.push(move)
+            score = -negamax(board, 1, -1_000_000, 1_000_000, deadline)
+            board.pop()
+            scored.append((score, move.uci(), move))
+            if time.monotonic() >= deadline:
+                break
+
+        best_score = max(item[0] for item in scored)
+        best_moves = [item[2] for item in scored if item[0] == best_score]
+        return rng.choice(best_moves).uci()
+''',
+                  encoding="utf-8",
               )
-              text = text.replace(
-                  """    root_color: chess.Color,
-                  deadline: float,
-              ) -> int:
-                  if time.monotonic() >= deadline or depth == 0 or board.is_game_over(claim_draw=True):
-                      return evaluate(board, root_color)
-              """,
-                  """    deadline: float,
-              ) -> int:
-                  if time.monotonic() >= deadline or depth == 0 or board.is_game_over(claim_draw=True):
-                      return evaluate(board)
-              """,
-              )
-              text = text.replace(
-                  "score = -negamax(board, depth - 1, -beta, -alpha, root_color, deadline)",
-                  "score = -negamax(board, depth - 1, -beta, -alpha, deadline)",
-              )
-              text = text.replace("        root_color = board.turn\n", "")
-              text = text.replace(
-                  "score = -negamax(board, 1, -1_000_000, 1_000_000, root_color, deadline)",
-                  "score = -negamax(board, 1, -1_000_000, 1_000_000, deadline)",
-              )
-              if "root_color" in text or "def evaluate(board: chess.Board) -> int:" not in text:
-                  raise SystemExit("teaching minimax patch incomplete")
-              p.write_text(text, encoding="utf-8")
 
               # Starter identity, while API stays 1.0 and Rules stay 1.2.
               for rel in ("pyproject.toml", "uv.lock"):
