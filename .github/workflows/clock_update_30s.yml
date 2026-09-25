@@ -1,0 +1,340 @@
+name: Update published chess clock
+
+on:
+  push:
+    paths:
+      - ".github/workflows/clock_update_30s.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install document patcher
+        run: python -m pip install --quiet pymupdf
+
+      - name: Patch every published clock-bearing artifact
+        shell: bash
+        run: |
+          cat > /tmp/clock_update.py <<'PY'
+          from __future__ import annotations
+          from pathlib import Path
+          import hashlib
+          import io
+          import json
+          import re
+          import zipfile
+
+          import fitz
+
+          ROOT = Path(".")
+          changed = []
+
+          TEXT_REPLACEMENTS = [
+              ("Starting clock | 10 seconds per game", "Starting clock | 30 seconds per game"),
+              ("Starting clock | 10.0 seconds per game", "Starting clock | 30.0 seconds per game"),
+              ("Initial clock             10.0 seconds per player", "Initial clock             30.0 seconds per player"),
+              ("10 seconds per game", "30 seconds per game"),
+              ("10.0 seconds per player", "30.0 seconds per player"),
+              ("0.1 seconds after each accepted legal move", "0.3 seconds after each accepted legal move"),
+              ("0.1 seconds after a legal move", "0.3 seconds after a legal move"),
+              ("+0.1 s", "+0.3 s"),
+              ("+0.1s", "+0.3s"),
+              ("initial_time: float = 10.0", "initial_time: float = 30.0"),
+              ("initial_time_seconds = 10.0", "initial_time_seconds = 30.0"),
+              ("increment: float = 0.1", "increment: float = 0.3"),
+              ("increment_seconds = 0.1", "increment_seconds = 0.3"),
+          ]
+
+          TEXT_EXTS = {
+              ".py", ".md", ".txt", ".html", ".htm", ".json", ".toml", ".yaml",
+              ".yml", ".js", ".css", ".cmd", ".bat", ".ps1", ".sh", ".ini", ".cfg"
+          }
+
+          def patch_text(text: str) -> tuple[str, int]:
+              count = 0
+              for old, new in TEXT_REPLACEMENTS:
+                  n = text.count(old)
+                  if n:
+                      text = text.replace(old, new)
+                      count += n
+              return text, count
+
+          def patch_text_file(path: Path) -> int:
+              text = path.read_text(encoding="utf-8")
+              new, n = patch_text(text)
+              if n:
+                  path.write_text(new, encoding="utf-8")
+                  changed.append((str(path), n))
+              return n
+
+          def patch_docx_bytes(data: bytes) -> tuple[bytes, int]:
+              src = io.BytesIO(data)
+              out = io.BytesIO()
+              total = 0
+              with zipfile.ZipFile(src, "r") as zin, zipfile.ZipFile(out, "w") as zout:
+                  for info in zin.infolist():
+                      payload = zin.read(info.filename)
+                      if info.filename.endswith(".xml"):
+                          try:
+                              text = payload.decode("utf-8")
+                          except UnicodeDecodeError:
+                              text = None
+                          if text is not None:
+                              text2, n = patch_text(text)
+                              total += n
+                              payload = text2.encode("utf-8")
+                      zout.writestr(info, payload)
+              return out.getvalue(), total
+
+          PDF_REPLACEMENTS = [
+              ("10.0 seconds", "30.0 seconds"),
+              ("10 seconds", "30 seconds"),
+              ("10.0-second", "30.0-second"),
+              ("10-second", "30-second"),
+              ("10.0 s", "30.0 s"),
+              ("10 s", "30 s"),
+              ("0.1 seconds", "0.3 seconds"),
+              ("0.1-second", "0.3-second"),
+              ("0.1 s", "0.3 s"),
+          ]
+
+          def rgb_from_int(value: int):
+              return ((value >> 16 & 255) / 255.0, (value >> 8 & 255) / 255.0, (value & 255) / 255.0)
+
+          def span_style_for_rect(page, rect):
+              best = None
+              best_area = 0.0
+              d = page.get_text("dict")
+              for block in d.get("blocks", []):
+                  for line in block.get("lines", []):
+                      for span in line.get("spans", []):
+                          sr = fitz.Rect(span["bbox"])
+                          inter = sr & rect
+                          area = max(0.0, inter.width) * max(0.0, inter.height)
+                          if area > best_area:
+                              best_area = area
+                              best = span
+              if best:
+                  return float(best.get("size", 10.0)), rgb_from_int(int(best.get("color", 0)))
+              return 10.0, (0, 0, 0)
+
+          def patch_pdf_bytes(data: bytes) -> tuple[bytes, int]:
+              doc = fitz.open(stream=data, filetype="pdf")
+              total = 0
+              for page in doc:
+                  # Collect longer strings first and de-duplicate overlapping matches.
+                  matches = []
+                  for old, new in PDF_REPLACEMENTS:
+                      for rect in page.search_for(old):
+                          matches.append((rect, old, new))
+                  matches.sort(key=lambda item: (-len(item[1]), item[0].y0, item[0].x0))
+                  accepted = []
+                  for rect, old, new in matches:
+                      if any((rect & prev[0]).get_area() > 0 for prev in accepted):
+                          continue
+                      size, color = span_style_for_rect(page, rect)
+                      accepted.append((rect, new, size, color))
+                  if not accepted:
+                      continue
+                  for rect, new, size, color in accepted:
+                      page.add_redact_annot(
+                          rect,
+                          text=new,
+                          fontname="helv",
+                          fontsize=max(6.0, size),
+                          align=fitz.TEXT_ALIGN_LEFT,
+                          fill=(1, 1, 1),
+                          text_color=color,
+                          cross_out=False,
+                      )
+                  page.apply_redactions()
+                  total += len(accepted)
+              if not total:
+                  doc.close()
+                  return data, 0
+              out = io.BytesIO()
+              doc.save(out, garbage=4, deflate=True)
+              doc.close()
+              return out.getvalue(), total
+
+          def patch_zip_bytes(data: bytes, depth: int = 0) -> tuple[bytes, int]:
+              src = io.BytesIO(data)
+              out = io.BytesIO()
+              total = 0
+              with zipfile.ZipFile(src, "r") as zin, zipfile.ZipFile(out, "w") as zout:
+                  for info in zin.infolist():
+                      payload = zin.read(info.filename)
+                      suffix = Path(info.filename).suffix.lower()
+                      n = 0
+                      if suffix in TEXT_EXTS:
+                          try:
+                              text = payload.decode("utf-8")
+                          except UnicodeDecodeError:
+                              text = None
+                          if text is not None:
+                              text2, n = patch_text(text)
+                              payload = text2.encode("utf-8")
+                      elif suffix == ".pdf":
+                          payload, n = patch_pdf_bytes(payload)
+                      elif suffix == ".docx":
+                          payload, n = patch_docx_bytes(payload)
+                      elif suffix == ".zip" and depth < 1:
+                          payload, n = patch_zip_bytes(payload, depth + 1)
+                      total += n
+                      zout.writestr(info, payload)
+              return out.getvalue(), total
+
+          # Patch all repository text files that could carry published rules.
+          for path in ROOT.rglob("*"):
+              if not path.is_file():
+                  continue
+              if ".git" in path.parts or path.suffix.lower() not in TEXT_EXTS:
+                  continue
+              if path.as_posix() == ".github/workflows/clock_update_30s.yml":
+                  continue
+              patch_text_file(path)
+
+          # Patch public DOCX/PDF artifacts.
+          for path in [
+              Path("docs/materials/rules.docx"),
+          ]:
+              data = path.read_bytes()
+              new, n = patch_docx_bytes(data)
+              if n:
+                  path.write_bytes(new)
+                  changed.append((str(path), n))
+
+          for path in [
+              Path("docs/materials/STUDENT_GUIDE.pdf"),
+              Path("docs/materials/guide.pdf"),
+              Path("docs/materials/project.pdf"),
+              Path("docs/materials/rules.pdf"),
+          ]:
+              data = path.read_bytes()
+              new, n = patch_pdf_bytes(data)
+              if n:
+                  path.write_bytes(new)
+                  changed.append((str(path), n))
+
+          # Patch both downloadable Starter archives, including source and embedded docs.
+          for path in [
+              Path("docs/downloads/Chess_Agent_Competition_Starter_v1.0.zip"),
+              Path("docs/downloads/student-kit.zip"),
+          ]:
+              data = path.read_bytes()
+              new, n = patch_zip_bytes(data)
+              if n:
+                  path.write_bytes(new)
+                  changed.append((str(path), n))
+
+          # Rules are now revision 1.2; Starter filename/version remains v1.0 to avoid link churn.
+          manifest_path = Path("docs/data/manifest.json")
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          manifest["rules_version"] = "1.2"
+
+          for entry in manifest["files"]:
+              p = Path("docs") / entry["path"]
+              data = p.read_bytes()
+              entry["bytes"] = len(data)
+              entry["sha256"] = hashlib.sha256(data).hexdigest()
+          manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+          # Audit user-facing text, PDFs, DOCX and ZIP contents for superseded policy values.
+          old_patterns = [
+              re.compile(r"Starting clock.{0,20}10(?:\.0)?\s*(?:s|seconds)", re.I),
+              re.compile(r"Initial clock.{0,20}10(?:\.0)?\s*(?:s|seconds)", re.I),
+              re.compile(r"initial_time(?:_seconds)?\s*(?::\s*float\s*)?=\s*10\.0", re.I),
+              re.compile(r"increment(?:_seconds)?\s*(?::\s*float\s*)?=\s*0\.1", re.I),
+              re.compile(r"(?:increment|time added).{0,50}0\.1\s*(?:s|seconds)", re.I),
+          ]
+
+          failures = []
+
+          def audit_text(label: str, text: str):
+              for pat in old_patterns:
+                  m = pat.search(text)
+                  if m:
+                      failures.append(f"{label}: {m.group(0)!r}")
+
+          for path in [
+              Path("README.md"),
+              Path("docs/materials/PUBLIC_COMPETITION_RULES.md"),
+              Path("docs/materials/rules.md"),
+              Path("docs/index.html"),
+              Path("docs/project.html"),
+              Path("docs/competition.html"),
+          ]:
+              audit_text(str(path), path.read_text(encoding="utf-8"))
+
+          for path in [
+              Path("docs/materials/STUDENT_GUIDE.pdf"),
+              Path("docs/materials/guide.pdf"),
+              Path("docs/materials/project.pdf"),
+              Path("docs/materials/rules.pdf"),
+          ]:
+              doc = fitz.open(path)
+              text = "\n".join(page.get_text() for page in doc)
+              doc.close()
+              audit_text(str(path), text)
+
+          docx = Path("docs/materials/rules.docx").read_bytes()
+          with zipfile.ZipFile(io.BytesIO(docx), "r") as z:
+              xml_text = "\n".join(
+                  z.read(name).decode("utf-8", errors="ignore")
+                  for name in z.namelist() if name.endswith(".xml")
+              )
+          audit_text("docs/materials/rules.docx", re.sub(r"<[^>]+>", " ", xml_text))
+
+          for path in [
+              Path("docs/downloads/Chess_Agent_Competition_Starter_v1.0.zip"),
+              Path("docs/downloads/student-kit.zip"),
+          ]:
+              with zipfile.ZipFile(path, "r") as z:
+                  for name in z.namelist():
+                      suffix = Path(name).suffix.lower()
+                      if suffix in TEXT_EXTS:
+                          try:
+                              t = z.read(name).decode("utf-8")
+                          except UnicodeDecodeError:
+                              continue
+                          audit_text(f"{path}:{name}", t)
+                      elif suffix == ".pdf":
+                          d = fitz.open(stream=z.read(name), filetype="pdf")
+                          t = "\n".join(p.get_text() for p in d)
+                          d.close()
+                          audit_text(f"{path}:{name}", t)
+
+          print("Changed artifacts:")
+          for name, n in changed:
+              print(f"  {name}: {n} replacement(s)")
+          if failures:
+              print("Superseded clock values remain:")
+              for item in failures:
+                  print("  " + item)
+              raise SystemExit(2)
+          print("Clock audit passed: published rule-bearing artifacts use 30 s + 0.3 s.")
+
+          PY
+          python /tmp/clock_update.py
+
+      - name: Commit synchronized published artifacts
+        shell: bash
+        run: |
+          git config user.name "chess-tournament-maintenance"
+          git config user.email "actions@users.noreply.github.com"
+          git rm .github/workflows/clock_update_30s.yml
+          git add -A
+          git diff --cached --stat
+          git commit -m "Update published chess clock to 30+0.3"
+          git push
