@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "student_kit_version": "v1.0",
+  "student_kit_version": "v1.1",
   "rules_version": "1.2",
   "official_results_published": false,
   "demo_type": "local_student_walkthrough",
@@ -42,14 +42,19 @@
       "sha256": "aff5f0cb10196e6f1f572398b85751743ced606e4c6e9cd4a2cb7a3a4b0e089a"
     },
     {
+      "path": "downloads/Chess_Agent_Competition_Starter_v1.1.zip",
+      "bytes": 635747,
+      "sha256": "f53e53278d26ee2b874dc4b38f8ed35ace2f4b7512d01342fb4699d3f582f8a3"
+    },
+    {
       "path": "downloads/abc123.py",
       "bytes": 422,
       "sha256": "cc5a198c3d51a313e69495e07ec8374e10859f9e898fbdb636cb2edf3d6a4467"
     },
     {
       "path": "downloads/student-kit.zip",
-      "bytes": 635720,
-      "sha256": "aff5f0cb10196e6f1f572398b85751743ced606e4c6e9cd4a2cb7a3a4b0e089a"
+      "bytes": 635747,
+      "sha256": "f53e53278d26ee2b874dc4b38f8ed35ace2f4b7512d01342fb4699d3f582f8a3"
     },
     {
       "path": "getting-started.html",
@@ -59,7 +64,7 @@
     {
       "path": "index.html",
       "bytes": 2218,
-      "sha256": "56b7150fbf2a1f47fe7b3091bf89148eea28c34d97f427f53e5af799dbf0f634"
+      "sha256": "0fc06a0b01e63ca55b31fd6513659f2444a332cd2b85be26f7dcbc8730b930e3"
     },
     {
       "path": "leaderboard.html",
@@ -68,18 +73,18 @@
     },
     {
       "path": "materials/PUBLIC_COMPETITION_RULES.md",
-      "bytes": 6045,
-      "sha256": "99c2524c9e7e66d78373f74253a27a29f67f89d07755d03114b7a7968876ae57"
+      "bytes": 6087,
+      "sha256": "1fda149bda5691548c2631ff11fc2e12b64ac7ea141e5e7587e5097e652e8ec6"
     },
     {
       "path": "materials/STUDENT_GUIDE.pdf",
-      "bytes": 336573,
-      "sha256": "a3dc68929eb0b921e58274315888b8f2eadaad2c4e0a343295c2f43681759151"
+      "bytes": 365963,
+      "sha256": "d687ed0eafe3738bc3c7b1e4b031cfbbc407758dde985e68b528c67e0d67d159"
     },
     {
       "path": "materials/guide.pdf",
-      "bytes": 336573,
-      "sha256": "a3dc68929eb0b921e58274315888b8f2eadaad2c4e0a343295c2f43681759151"
+      "bytes": 365963,
+      "sha256": "d687ed0eafe3738bc3c7b1e4b031cfbbc407758dde985e68b528c67e0d67d159"
     },
     {
       "path": "materials/project.pdf",
@@ -88,23 +93,23 @@
     },
     {
       "path": "materials/rules.docx",
-      "bytes": 41869,
-      "sha256": "0d9b02ae5b487be6f7a130160d9b0d3f232dfb14f0f663baee2a7d5b4c87b77f"
+      "bytes": 41910,
+      "sha256": "d4fd59db490b5cff783e0a05286e3479fd259adb41ef9feb5456e17094f3a614"
     },
     {
       "path": "materials/rules.md",
-      "bytes": 6045,
-      "sha256": "99c2524c9e7e66d78373f74253a27a29f67f89d07755d03114b7a7968876ae57"
+      "bytes": 6087,
+      "sha256": "1fda149bda5691548c2631ff11fc2e12b64ac7ea141e5e7587e5097e652e8ec6"
     },
     {
       "path": "materials/rules.pdf",
-      "bytes": 247874,
-      "sha256": "1639200d2d1d179723219eff31a130e570f1e566abd1c4cb63d0bbc84071d492"
+      "bytes": 96946,
+      "sha256": "65bf58a701efe4ca7038e844a9b3322e2374a8bdadb96377b3f0e01d0cf26837"
     },
     {
       "path": "project.html",
       "bytes": 2383,
-      "sha256": "dff1e90448408f6757fc6e65ec2f1249136157b79c55d1c6ed176408b00c2347"
+      "sha256": "07a6e981eac50acb40f14d87133c40b40e99ca242ae9196b8adeeb06aad0567d"
     },
     {
       "path": "replay.html",

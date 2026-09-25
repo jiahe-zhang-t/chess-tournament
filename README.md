@@ -8,7 +8,7 @@ Build and test your chess agent locally. Compete in the class tournament.
 
 ## Getting Started
 
-1. Download and extract the [Starter](https://jiahe-zhang-t.github.io/chess-tournament/downloads/Chess_Agent_Competition_Starter_v1.0.zip).
+1. Download and extract the [Starter](https://jiahe-zhang-t.github.io/chess-tournament/downloads/Chess_Agent_Competition_Starter_v1.1.zip).
 2. Follow the [Student Guide](https://jiahe-zhang-t.github.io/chess-tournament/materials/guide.pdf) to open Chess Agent Test Space.
 3. Add your agent, validate it, and play practice games.
 

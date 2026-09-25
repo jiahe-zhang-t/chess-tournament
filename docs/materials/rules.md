@@ -1,5 +1,7 @@
 # Chess Competition Rules
 
+*Rules version 1.2 - September 25, 2026*
+
 ## Submission
 
 Work individually. Submit one Python file on Gradescope, named with your NetID, such as `abc123.py`. The file must be at most 1 MiB and contain one `ChessAgent` subclass that takes no constructor arguments. Do not submit the Starter ZIP or a folder.
