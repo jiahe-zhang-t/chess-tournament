@@ -93,7 +93,13 @@ jobs:
                               text = None
                           if text is not None:
                               text2, n = patch_text(text)
-                              total += n
+                              text2, n2 = re.subn(
+                                  r"(Time added after a legal move(?:(?!</w:tr>).)*?)0\\.1(?=(?:(?!</w:tr>).)*?seconds)",
+                                  lambda m: m.group(1) + "0.3",
+                                  text2,
+                                  flags=re.S,
+                              )
+                              total += n + n2
                               payload = text2.encode("utf-8")
                       zout.writestr(info, payload)
               return out.getvalue(), total
