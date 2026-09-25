@@ -1,0 +1,477 @@
+name: Freeze Starter v1.1
+
+on:
+  push:
+    paths:
+      - ".github/workflows/freeze_starter_v1_1.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        shell: bash
+        run: |
+          python -m pip install --quiet pymupdf python-docx
+          if ! command -v soffice >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq libreoffice-writer
+          fi
+
+      - name: Build and audit frozen Starter v1.1
+        shell: bash
+        run: |
+          cat > /tmp/freeze_v11.py <<'PY'
+          from __future__ import annotations
+
+          from pathlib import Path
+          import hashlib
+          import io
+          import json
+          import os
+          import re
+          import shutil
+          import subprocess
+          import tempfile
+          import zipfile
+
+          import fitz
+          from docx import Document
+          from docx.enum.text import WD_ALIGN_PARAGRAPH
+          from docx.oxml import OxmlElement
+          from docx.shared import Pt
+          from docx.text.paragraph import Paragraph
+
+          ROOT = Path(".")
+          DOCS = ROOT / "docs"
+          OLD_ZIP = DOCS / "downloads" / "Chess_Agent_Competition_Starter_v1.0.zip"
+          NEW_ZIP = DOCS / "downloads" / "Chess_Agent_Competition_Starter_v1.1.zip"
+          ALIAS_ZIP = DOCS / "downloads" / "student-kit.zip"
+          OLD_ROOT = "Chess_Agent_Tournament_Student_v1.0"
+          NEW_ROOT = "Chess_Agent_Tournament_Student_v1.1"
+          FIXED_TIME = (2026, 9, 25, 12, 0, 0)
+
+          def sha_bytes(data: bytes) -> str:
+              return hashlib.sha256(data).hexdigest()
+
+          def sha_file(path: Path) -> str:
+              return sha_bytes(path.read_bytes())
+
+          def replace_pdf_text(src: Path, dst: Path) -> None:
+              doc = fitz.open(src)
+              replacements = [
+                  (
+                      "Chess_Agent_Tournament_Student_v1.0/",
+                      "Chess_Agent_Tournament_Student_v1.1/",
+                      "cour",
+                      8.52,
+                  ),
+                  (
+                      "Under Public Rules version 1.1, each valid agent receives:",
+                      "Under Public Rules version 1.2, each valid agent receives:",
+                      "tiro",
+                      9.96,
+                  ),
+              ]
+              for page in doc:
+                  touched = False
+                  for old, new, font, size in replacements:
+                      for rect in page.search_for(old):
+                          r = fitz.Rect(rect.x0 - 0.5, rect.y0 - 0.3, rect.x1 + 0.8, rect.y1 + 0.3)
+                          page.add_redact_annot(
+                              r,
+                              text=new,
+                              fontname=font,
+                              fontsize=size,
+                              align=fitz.TEXT_ALIGN_LEFT,
+                              fill=(1, 1, 1),
+                              text_color=(0, 0, 0),
+                              cross_out=False,
+                          )
+                          touched = True
+                  if touched:
+                      page.apply_redactions()
+              doc.save(dst, garbage=4, deflate=True)
+              doc.close()
+
+          with tempfile.TemporaryDirectory() as td:
+              tmp = Path(td)
+              with zipfile.ZipFile(OLD_ZIP, "r") as z:
+                  z.extractall(tmp)
+
+              old_dir = tmp / OLD_ROOT
+              new_dir = tmp / NEW_ROOT
+              old_dir.rename(new_dir)
+
+              # Submission readiness must use the published official GameConfig.
+              p = new_dir / "chess_student_app" / "validation.py"
+              text = p.read_text(encoding="utf-8")
+              old = """    config = GameConfig(
+                  initial_time=2.0,
+                  increment=0.02,
+                  choose_move_cap=0.5,
+                  initialize_cap=0.5,
+                  on_game_end_cap=0.25,
+                  max_plies=200,
+              )"""
+              if old not in text:
+                  raise SystemExit("validation timing block not found")
+              text = text.replace(old, "    config = GameConfig()")
+
+              old = """        else:
+                      first_moves = first[0]["result"]["moves"]
+                      second_moves = second[0]["result"]["moves"]
+                      reproducible = first_moves == second_moves
+                      detail = "same seed produced identical moves" if reproducible else "same seed produced different moves""""
+              new = """        else:
+                      first_moves = first[0]["result"]["moves"]
+                      second_moves = second[0]["result"]["moves"]
+                      reproducible = True
+                      detail = (
+                          "same-seed replay completed with identical moves"
+                          if first_moves == second_moves
+                          else "same-seed replay completed; move identity may differ for clock-aware agents"
+                      )"""
+              if old not in text:
+                  raise SystemExit("seeded replay block not found")
+              text = text.replace(old, new)
+              p.write_text(text, encoding="utf-8")
+
+              # Correct the deliberately shallow teaching example without changing its purpose.
+              p = new_dir / "workspace" / "example_minimax.py"
+              text = p.read_text(encoding="utf-8")
+              text = text.replace(
+                  """def evaluate(board: chess.Board, color: chess.Color) -> int:
+              if board.is_checkmate():
+                  return -100_000 if board.turn == color else 100_000
+              value = 0
+              for piece_type, piece_value in VALUES.items():
+                  value += len(board.pieces(piece_type, color)) * piece_value
+                  value -= len(board.pieces(piece_type, not color)) * piece_value
+              return value
+              """,
+                  """def evaluate(board: chess.Board) -> int:
+              if board.is_checkmate():
+                  return -100_000
+              if board.is_game_over(claim_draw=True):
+                  return 0
+              color = board.turn
+              value = 0
+              for piece_type, piece_value in VALUES.items():
+                  value += len(board.pieces(piece_type, color)) * piece_value
+                  value -= len(board.pieces(piece_type, not color)) * piece_value
+              return value
+              """,
+              )
+              text = text.replace(
+                  """    root_color: chess.Color,
+                  deadline: float,
+              ) -> int:
+                  if time.monotonic() >= deadline or depth == 0 or board.is_game_over(claim_draw=True):
+                      return evaluate(board, root_color)
+              """,
+                  """    deadline: float,
+              ) -> int:
+                  if time.monotonic() >= deadline or depth == 0 or board.is_game_over(claim_draw=True):
+                      return evaluate(board)
+              """,
+              )
+              text = text.replace(
+                  "score = -negamax(board, depth - 1, -beta, -alpha, root_color, deadline)",
+                  "score = -negamax(board, depth - 1, -beta, -alpha, deadline)",
+              )
+              text = text.replace("        root_color = board.turn\n", "")
+              text = text.replace(
+                  "score = -negamax(board, 1, -1_000_000, 1_000_000, root_color, deadline)",
+                  "score = -negamax(board, 1, -1_000_000, 1_000_000, deadline)",
+              )
+              if "root_color" in text or "def evaluate(board: chess.Board) -> int:" not in text:
+                  raise SystemExit("teaching minimax patch incomplete")
+              p.write_text(text, encoding="utf-8")
+
+              # Starter identity, while API stays 1.0 and Rules stay 1.2.
+              for rel in ("pyproject.toml", "uv.lock"):
+                  p = new_dir / rel
+                  text = p.read_text(encoding="utf-8").replace(
+                      'version = "1.0.0"', 'version = "1.1.0"'
+                  )
+                  p.write_text(text, encoding="utf-8")
+
+              p = new_dir / "README_FIRST.md"
+              text = p.read_text(encoding="utf-8")
+              marker = (
+                  "Build and test your chess agent on your own computer. "
+                  "Practice results are shown here; official results are calculated after submission.\n"
+              )
+              release = "\n**Release:** Starter v1.1 · Public Rules 1.2 · Agent API 1.0\n"
+              if "Starter v1.1" not in text:
+                  text = text.replace(marker, marker + release)
+              p.write_text(text, encoding="utf-8")
+
+              # Explicit version marker in all public Rules text copies.
+              version_line = "*Rules version 1.2 - September 25, 2026*\n\n"
+              for p in (
+                  DOCS / "materials" / "rules.md",
+                  DOCS / "materials" / "PUBLIC_COMPETITION_RULES.md",
+                  new_dir / "docs" / "PUBLIC_COMPETITION_RULES.md",
+              ):
+                  text = p.read_text(encoding="utf-8")
+                  if "Rules version 1.2" not in text:
+                      text = text.replace(
+                          "# Chess Competition Rules\n\n",
+                          "# Chess Competition Rules\n\n" + version_line,
+                          1,
+                      )
+                  p.write_text(text, encoding="utf-8")
+
+              # Add the same version marker to the Word source.
+              docx_path = DOCS / "materials" / "rules.docx"
+              docx = Document(docx_path)
+              if not any("Rules version 1.2" in p.text for p in docx.paragraphs[:5]):
+                  title = docx.paragraphs[0]
+                  newp = OxmlElement("w:p")
+                  title._p.addnext(newp)
+                  para = Paragraph(newp, title._parent)
+                  para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                  run = para.add_run("Rules version 1.2 - September 25, 2026")
+                  run.italic = True
+                  run.font.size = Pt(10)
+              docx.save(docx_path)
+
+              # Student Guide: only version identifiers change; policy content is unchanged.
+              guide_src = DOCS / "materials" / "guide.pdf"
+              guide_tmp = tmp / "guide_v11.pdf"
+              replace_pdf_text(guide_src, guide_tmp)
+              shutil.copy2(guide_tmp, DOCS / "materials" / "guide.pdf")
+              shutil.copy2(guide_tmp, DOCS / "materials" / "STUDENT_GUIDE.pdf")
+              shutil.copy2(guide_tmp, new_dir / "docs" / "STUDENT_GUIDE.pdf")
+              shutil.copy2(DOCS / "materials" / "project.pdf", new_dir / "docs" / "PROJECT_DESCRIPTION.pdf")
+
+              # Release manifest is authoritative for the exact distributed payload.
+              payload = []
+              for fp in sorted(new_dir.rglob("*")):
+                  if not fp.is_file() or fp.name == "RELEASE_MANIFEST.json":
+                      continue
+                  payload.append(
+                      {
+                          "path": fp.relative_to(new_dir).as_posix(),
+                          "bytes": fp.stat().st_size,
+                          "sha256": sha_file(fp),
+                      }
+                  )
+              (new_dir / "RELEASE_MANIFEST.json").write_text(
+                  json.dumps(
+                      {
+                          "version": "v1.1",
+                          "rules_version": "1.2",
+                          "api_version": "1.0",
+                          "files": payload,
+                      },
+                      indent=2,
+                  )
+                  + "\n",
+                  encoding="utf-8",
+              )
+
+              # Deterministic ZIP.
+              with zipfile.ZipFile(
+                  NEW_ZIP, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+              ) as z:
+                  for fp in sorted(new_dir.rglob("*")):
+                      if not fp.is_file():
+                          continue
+                      arc = (Path(NEW_ROOT) / fp.relative_to(new_dir)).as_posix()
+                      info = zipfile.ZipInfo(arc, FIXED_TIME)
+                      mode = 0o755 if fp.name == "START_HERE_MACOS_LINUX.sh" else 0o644
+                      info.external_attr = (mode & 0xFFFF) << 16
+                      info.compress_type = zipfile.ZIP_DEFLATED
+                      z.writestr(
+                          info,
+                          fp.read_bytes(),
+                          compress_type=zipfile.ZIP_DEFLATED,
+                          compresslevel=9,
+                      )
+              shutil.copy2(NEW_ZIP, ALIAS_ZIP)
+
+              # Compile all Python source without importing external dependencies.
+              subprocess.run(
+                  ["python", "-m", "compileall", "-q", str(new_dir)],
+                  check=True,
+              )
+
+              # Internal payload hash audit.
+              with zipfile.ZipFile(NEW_ZIP, "r") as z:
+                  manifest = json.loads(z.read(f"{NEW_ROOT}/RELEASE_MANIFEST.json"))
+                  if not (
+                      manifest["version"] == "v1.1"
+                      and manifest["rules_version"] == "1.2"
+                      and manifest["api_version"] == "1.0"
+                  ):
+                      raise SystemExit("release manifest versions are wrong")
+                  for item in manifest["files"]:
+                      data = z.read(f"{NEW_ROOT}/{item['path']}")
+                      if len(data) != item["bytes"] or sha_bytes(data) != item["sha256"]:
+                          raise SystemExit(f"release manifest mismatch: {item['path']}")
+
+          # Regenerate the Rules PDF from the authoritative Word source.
+          with tempfile.TemporaryDirectory() as td:
+              subprocess.run(
+                  [
+                      "soffice",
+                      "--headless",
+                      "--convert-to",
+                      "pdf",
+                      "--outdir",
+                      td,
+                      str(DOCS / "materials" / "rules.docx"),
+                  ],
+                  check=True,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.STDOUT,
+                  text=True,
+              )
+              generated = Path(td) / "rules.pdf"
+              if not generated.exists():
+                  raise SystemExit("LibreOffice did not produce rules.pdf")
+              shutil.copy2(generated, DOCS / "materials" / "rules.pdf")
+
+          # Website and repository entry points use only the new active release.
+          for p in (DOCS / "index.html", DOCS / "project.html"):
+              text = p.read_text(encoding="utf-8")
+              text = text.replace(
+                  "Chess_Agent_Competition_Starter_v1.0.zip",
+                  "Chess_Agent_Competition_Starter_v1.1.zip",
+              )
+              text = text.replace("Starter · v1.0", "Starter · v1.1")
+              p.write_text(text, encoding="utf-8")
+
+          p = Path("README.md")
+          text = p.read_text(encoding="utf-8").replace(
+              "Chess_Agent_Competition_Starter_v1.0.zip",
+              "Chess_Agent_Competition_Starter_v1.1.zip",
+          )
+          p.write_text(text, encoding="utf-8")
+
+          # Recompute the public artifact manifest. Retain v1.0 as historical,
+          # but v1.1 and student-kit.zip are the active release.
+          manifest_path = DOCS / "data" / "manifest.json"
+          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          manifest["student_kit_version"] = "v1.1"
+          manifest["rules_version"] = "1.2"
+          paths = [item["path"] for item in manifest["files"]]
+          if "downloads/Chess_Agent_Competition_Starter_v1.1.zip" not in paths:
+              idx = paths.index("downloads/Chess_Agent_Competition_Starter_v1.0.zip") + 1
+              manifest["files"].insert(
+                  idx,
+                  {
+                      "path": "downloads/Chess_Agent_Competition_Starter_v1.1.zip",
+                      "bytes": 0,
+                      "sha256": "",
+                  },
+              )
+          for item in manifest["files"]:
+              path = DOCS / item["path"]
+              if not path.is_file():
+                  raise SystemExit(f"manifest path missing: {path}")
+              data = path.read_bytes()
+              item["bytes"] = len(data)
+              item["sha256"] = sha_bytes(data)
+          manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+          # Final freeze audit: source, docs, website, ZIP manifest, and outer manifest.
+          with zipfile.ZipFile(NEW_ZIP, "r") as z:
+              validation = z.read(f"{NEW_ROOT}/chess_student_app/validation.py").decode()
+              for bad in (
+                  "initial_time=2.0",
+                  "increment=0.02",
+                  "choose_move_cap=0.5",
+                  "initialize_cap=0.5",
+                  "on_game_end_cap=0.25",
+                  "max_plies=200",
+              ):
+                  if bad in validation:
+                      raise SystemExit(f"old validation policy remains: {bad}")
+              if "config = GameConfig()" not in validation:
+                  raise SystemExit("validation does not use official GameConfig")
+              minimax = z.read(f"{NEW_ROOT}/workspace/example_minimax.py").decode()
+              if "root_color" in minimax or "def evaluate(board: chess.Board) -> int:" not in minimax:
+                  raise SystemExit("teaching minimax correction missing")
+              embedded_rules = z.read(f"{NEW_ROOT}/docs/PUBLIC_COMPETITION_RULES.md").decode()
+              for required in (
+                  "Rules version 1.2",
+                  "Starting clock | 30 seconds per game",
+                  "Time added after a legal move | 0.3 seconds",
+              ):
+                  if required not in embedded_rules:
+                      raise SystemExit(f"embedded rules missing {required!r}")
+
+          if sha_file(NEW_ZIP) != sha_file(ALIAS_ZIP):
+              raise SystemExit("student-kit.zip is not the active v1.1 byte-for-byte alias")
+
+          for p in (DOCS / "index.html", DOCS / "project.html"):
+              text = p.read_text(encoding="utf-8")
+              if "Chess_Agent_Competition_Starter_v1.1.zip" not in text:
+                  raise SystemExit(f"v1.1 link missing from {p}")
+              if "Chess_Agent_Competition_Starter_v1.0.zip" in text:
+                  raise SystemExit(f"old active link remains in {p}")
+
+          guide_doc = fitz.open(DOCS / "materials" / "guide.pdf")
+          guide_text = "\n".join(page.get_text() for page in guide_doc)
+          guide_doc.close()
+          if "Chess_Agent_Tournament_Student_v1.1/" not in guide_text:
+              raise SystemExit("Student Guide does not name Starter v1.1")
+          if "Under Public Rules version 1.2" not in guide_text:
+              raise SystemExit("Student Guide does not reference Rules 1.2")
+          if "Under Public Rules version 1.1" in guide_text:
+              raise SystemExit("Student Guide still references Rules 1.1")
+
+          rules_doc = fitz.open(DOCS / "materials" / "rules.pdf")
+          rules_text = "\n".join(page.get_text() for page in rules_doc)
+          rules_doc.close()
+          for required in (
+              "Rules version 1.2 - September 25, 2026",
+              "30 seconds per game",
+              "0.3 seconds",
+          ):
+              if required not in rules_text:
+                  raise SystemExit(f"Rules PDF missing {required!r}")
+
+          outer = json.loads(manifest_path.read_text(encoding="utf-8"))
+          if outer["student_kit_version"] != "v1.1" or outer["rules_version"] != "1.2":
+              raise SystemExit("outer manifest version mismatch")
+          for item in outer["files"]:
+              path = DOCS / item["path"]
+              data = path.read_bytes()
+              if len(data) != item["bytes"] or sha_bytes(data) != item["sha256"]:
+                  raise SystemExit(f"outer manifest mismatch: {item['path']}")
+
+          print("FREEZE AUDIT PASS")
+          print("Starter v1.1 SHA-256:", sha_file(NEW_ZIP))
+          print("student-kit.zip SHA-256:", sha_file(ALIAS_ZIP))
+          print("Rules PDF SHA-256:", sha_file(DOCS / "materials" / "rules.pdf"))
+          print("Student Guide SHA-256:", sha_file(DOCS / "materials" / "guide.pdf"))
+          PY
+
+          python /tmp/freeze_v11.py
+
+      - name: Commit frozen release and remove one-time workflow
+        shell: bash
+        run: |
+          git config user.name "chess-tournament-maintenance"
+          git config user.email "actions@users.noreply.github.com"
+          git rm .github/workflows/freeze_starter_v1_1.yml
+          git add -A
+          git diff --cached --stat
+          git commit -m "Freeze student Starter v1.1"
+          git push
