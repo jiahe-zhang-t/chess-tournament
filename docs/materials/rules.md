@@ -20,8 +20,8 @@ Your agent receives game information and an anonymous opponent ID that lasts onl
 
 | Limit | Allowance per agent |
 |---|---|
-| Starting clock | 10 seconds per game |
-| Time added after a legal move | 0.1 seconds |
+| Starting clock | 30 seconds per game |
+| Time added after a legal move | 0.3 seconds |
 | One move decision | 5 seconds or the remaining clock, whichever is less |
 | Game initialization | 1 second |
 | End of game callback | 0.5 seconds |

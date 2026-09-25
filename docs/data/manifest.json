@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "student_kit_version": "v1.0",
-  "rules_version": "1.1",
+  "rules_version": "1.2",
   "official_results_published": false,
   "demo_type": "local_student_walkthrough",
   "starter_name": "Chess Agent Competition Starter",
@@ -38,8 +38,8 @@
     },
     {
       "path": "downloads/Chess_Agent_Competition_Starter_v1.0.zip",
-      "bytes": 635719,
-      "sha256": "b8817a548878a51155eb8b871e3537ff04b03d2c468e45addea5c1468cfd3d19"
+      "bytes": 635720,
+      "sha256": "aff5f0cb10196e6f1f572398b85751743ced606e4c6e9cd4a2cb7a3a4b0e089a"
     },
     {
       "path": "downloads/abc123.py",
@@ -48,8 +48,8 @@
     },
     {
       "path": "downloads/student-kit.zip",
-      "bytes": 635719,
-      "sha256": "b8817a548878a51155eb8b871e3537ff04b03d2c468e45addea5c1468cfd3d19"
+      "bytes": 635720,
+      "sha256": "aff5f0cb10196e6f1f572398b85751743ced606e4c6e9cd4a2cb7a3a4b0e089a"
     },
     {
       "path": "getting-started.html",
@@ -69,7 +69,7 @@
     {
       "path": "materials/PUBLIC_COMPETITION_RULES.md",
       "bytes": 6045,
-      "sha256": "fd96101153fc798151e2f80ec4567770915c39eac20e96a668c6edbb5c8e92e8"
+      "sha256": "99c2524c9e7e66d78373f74253a27a29f67f89d07755d03114b7a7968876ae57"
     },
     {
       "path": "materials/STUDENT_GUIDE.pdf",
@@ -88,18 +88,18 @@
     },
     {
       "path": "materials/rules.docx",
-      "bytes": 41873,
-      "sha256": "0b4f227d23803cd92545bdacae1e77d1358e344c8618e73e624d42b93f2c2a0c"
+      "bytes": 41869,
+      "sha256": "0d9b02ae5b487be6f7a130160d9b0d3f232dfb14f0f663baee2a7d5b4c87b77f"
     },
     {
       "path": "materials/rules.md",
       "bytes": 6045,
-      "sha256": "fd96101153fc798151e2f80ec4567770915c39eac20e96a668c6edbb5c8e92e8"
+      "sha256": "99c2524c9e7e66d78373f74253a27a29f67f89d07755d03114b7a7968876ae57"
     },
     {
       "path": "materials/rules.pdf",
-      "bytes": 234917,
-      "sha256": "7c8d844bbf1ae7f9dff3d789b8a5ebbba2192ce555cfe1fc65f240c1b3c4378f"
+      "bytes": 247874,
+      "sha256": "1639200d2d1d179723219eff31a130e570f1e566abd1c4cb63d0bbc84071d492"
     },
     {
       "path": "project.html",
