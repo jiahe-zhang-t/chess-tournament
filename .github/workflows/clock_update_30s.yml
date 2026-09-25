@@ -48,6 +48,7 @@ jobs:
               ("10.0 seconds per player", "30.0 seconds per player"),
               ("0.1 seconds after each accepted legal move", "0.3 seconds after each accepted legal move"),
               ("0.1 seconds after a legal move", "0.3 seconds after a legal move"),
+              ("Time added after a legal move | 0.1 seconds", "Time added after a legal move | 0.3 seconds"),
               ("+0.1 s", "+0.3 s"),
               ("+0.1s", "+0.3s"),
               ("initial_time: float = 10.0", "initial_time: float = 30.0"),
