@@ -129,23 +129,18 @@ jobs:
                   raise SystemExit("validation timing block not found")
               text = text.replace(old, "    config = GameConfig()")
 
-              old = """        else:
-                      first_moves = first[0]["result"]["moves"]
-                      second_moves = second[0]["result"]["moves"]
-                      reproducible = first_moves == second_moves
-                      detail = "same seed produced identical moves" if reproducible else "same seed produced different moves""""
-              new = """        else:
-                      first_moves = first[0]["result"]["moves"]
-                      second_moves = second[0]["result"]["moves"]
-                      reproducible = True
-                      detail = (
-                          "same-seed replay completed with identical moves"
-                          if first_moves == second_moves
-                          else "same-seed replay completed; move identity may differ for clock-aware agents"
-                      )"""
-              if old not in text:
-                  raise SystemExit("seeded replay block not found")
-              text = text.replace(old, new)
+              if 'reproducible = first_moves == second_moves' not in text:
+                  raise SystemExit("seeded replay comparison not found")
+              text = text.replace(
+                  '            reproducible = first_moves == second_moves\n'
+                  '            detail = "same seed produced identical moves" if reproducible else "same seed produced different moves"',
+                  '            reproducible = True\n'
+                  '            detail = (\n'
+                  '                "same-seed replay completed with identical moves"\n'
+                  '                if first_moves == second_moves\n'
+                  '                else "same-seed replay completed; move identity may differ for clock-aware agents"\n'
+                  '            )',
+              )
               p.write_text(text, encoding="utf-8")
 
               # Correct the deliberately shallow teaching example without changing its purpose.
